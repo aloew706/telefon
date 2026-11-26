@@ -55,11 +55,6 @@ telefon/
 Windows;
 Python 3.10 или новее;
 драйвер Access (Microsoft Access Database Engine). Разрядность Python и драйвера должна совпадать (64-бит и 64-бит).
-powershell
-git clone https://github.com/aloew706/telefon.git
-cd telefon
-pip install -r requirements.txt
-python app.py
 
 Перед запуском закройте файл phones.accdb в Access. В PyCharm достаточно нажать Run на файле app.py.
 
