@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-head"><h1 class="page-title">Корзина</h1></div>
+{% if items %}
+<div class="cart-layout">
+  <div class="cart-list">
+    {% for it in items %}
+    <div class="cart-row">
+      <a class="cart-pic" href="{{ url_for('phone', id=it.id) }}">
+        {% if it.photo %}<img src="{{ url_for('photo', id=it.id, v=it.photo) }}" alt="">
+        {% else %}<div class="phone mini" style="background: {{ it.color|gradient }}"></div>{% endif %}
+      </a>
+      <div class="cart-info">
+        <div class="brand">{{ it.brand }}</div>
+        <a class="model" href="{{ url_for('phone', id=it.id) }}">{{ it.model }}</a>
+        <div class="specs">{{ [(it.storage ~ ' ГБ') if it.storage, it.color]|select|join(' · ') }}</div>
+        <div class="cart-actions">
+          <form method="post" action="{{ url_for('cart_update', pid=it.id) }}" class="qty-form">
+            <input type="number" name="qty" min="0" max="{{ it.limit }}" value="{{ it.qty }}" aria-label="Количество">
+            <button class="btn small ghost" type="submit">Обновить</button>
+          </form>
+          <form method="post" action="{{ url_for('cart_remove', pid=it.id) }}"><button class="link-btn" type="submit">Удалить</button></form>
+        </div>
+      </div>
+      <div class="cart-sum">{{ it.sum|money }}<small>{{ it.price|money }} × {{ it.qty }}</small></div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <aside class="summary">
+    <h2>Оформление</h2>
+    <div class="total"><span>Итого</span><strong>{{ total|money }}</strong></div>
+    {% if role == 'user' %}
+    <form method="post" action="{{ url_for('checkout') }}" class="checkout">
+      <label>Доставка
+        <select name="delivery">{% for m in delivery_methods %}<option>{{ m }}</option>{% endfor %}</select>
+      </label>
+      <label>Адрес доставки
+        <input name="address" value="{{ address }}" placeholder="Город, улица, дом, квартира">
+      </label>
+      <label>Оплата
+        <select name="payment">{% for m in payment_methods %}<option>{{ m }}</option>{% endfor %}</select>
+      </label>
+      <button class="btn block" type="submit">Оформить заказ</button>
+    </form>
+    <a class="sub-link" href="{{ url_for('orders') }}">Мои заказы ›</a>
+    {% else %}
+    <p class="muted">Чтобы оформить заказ, войдите или создайте аккаунт. Корзина сохранится.</p>
+    <a class="btn block" href="{{ url_for('login') }}">Войти</a>
+    <a class="sub-link" href="{{ url_for('register') }}">Регистрация ›</a>
+    {% endif %}
+  </aside>
+</div>
+{% else %}
+<div class="empty">Корзина пуста<br><br><a class="btn" href="{{ url_for('catalog') }}">Перейти в каталог</a>
+  {% if role == 'user' %}<br><br><a class="sub-link" href="{{ url_for('orders') }}">Мои заказы ›</a>{% endif %}</div>
+{% endif %}
+{% endblock %}

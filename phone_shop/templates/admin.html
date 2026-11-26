@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+
+{% macro control(f, val) %}
+  {%- if f.fk and f.name in fk_options -%}
+    <select name="{{ f.name }}" {{ 'required' if f.req and f.name != brand_col }}>
+      <option value="">Выберите…</option>
+      {% for id, label in fk_options[f.name].items() %}<option value="{{ id }}" {{ 'selected' if val == id }}>{{ label }}</option>{% endfor %}
+    </select>
+  {%- elif f.kind == 'longtext' -%}
+    <textarea name="{{ f.name }}" rows="6" {{ 'required' if f.req }}>{{ val if val is not none else '' }}</textarea>
+  {%- elif f.kind == 'bool' -%}
+    <input name="{{ f.name }}" type="checkbox" {{ 'checked' if val is none or val }} class="check">
+  {%- elif f.kind == 'int' -%}
+    <input name="{{ f.name }}" type="number" step="1" min="0" value="{{ val if val is not none else '' }}" {{ 'required' if f.req }}>
+  {%- elif f.kind == 'money' -%}
+    <input name="{{ f.name }}" type="number" step="0.01" min="0" value="{{ val if val is not none else '' }}" {{ 'required' if f.req }}>
+  {%- elif f.kind == 'date' -%}
+    <input name="{{ f.name }}" type="date" value="{{ val if val is not none else '' }}" {{ 'required' if f.req }}>
+  {%- else -%}
+    <input name="{{ f.name }}" type="text" value="{{ val if val is not none else '' }}" {{ 'required' if f.req }}>
+  {%- endif -%}
+{% endmacro %}
+
+{% block content %}
+<div class="page-head"><h1 class="page-title">Управление</h1></div>
+<div class="seg">
+  <a href="{{ url_for('admin', t='add') }}" class="{{ 'on' if t == 'add' }}">Добавить телефон</a>
+  <a href="{{ url_for('admin', t='edit') }}" class="{{ 'on' if t == 'edit' }}">Изменить телефоны</a>
+  <a href="{{ url_for('admin', t='orders') }}" class="{{ 'on' if t == 'orders' }}">Все заказы</a>
+</div>
+
+{% if t == 'add' %}
+<form method="post" action="{{ url_for('admin_add') }}" enctype="multipart/form-data" class="addform newphone">
+  <h2 class="wide">Новый телефон в каталог</h2>
+  {% for f in meta.fields %}
+  <label class="{{ 'wide' if f.kind == 'longtext' }}">{{ f.label }}{% if not f.req and f.kind != 'bool' %} (необязательно){% endif %}
+    {{ control(f, none) }}
+  </label>
+  {% if f.name == brand_col %}
+  <label>Или новая марка (если нужной нет в списке)
+    <input name="new_brand" type="text" placeholder="Например, Realme">
+  </label>
+  {% endif %}
+  {% endfor %}
+  <label>Фото телефона, лучше PNG (необязательно)
+    <input name="photo" type="file" accept="image/*">
+  </label>
+  <p class="admin-hint wide">Фото можно также просто положить в папку <b>templates/photos</b> и назвать его названием модели (например, Galaxy S24.png) или phone_&lt;код&gt;.png.</p>
+  <button class="btn" type="submit">Добавить в каталог</button>
+</form>
+
+{% elif t == 'edit' %}
+<form class="edit-search" method="get" action="{{ url_for('admin') }}">
+  <input type="hidden" name="t" value="edit">
+  <input name="q" value="{{ q }}" placeholder="Найти телефон по марке или модели" autocomplete="off">
+  <button class="btn small" type="submit">Найти</button>
+</form>
+<p class="admin-hint">Нажмите на телефон, измените нужные поля и нажмите «Сохранить». Новое фото заменит старое.</p>
+<div class="edit-list">
+  {% for it in items %}
+  {% set v = it.v %}{% set raw = it.raw %}
+  <details class="edit-card" id="p{{ v.id }}" {{ 'open' if v.id == open_id }}>
+    <summary>
+      <span class="thumb">{% if v.photo %}<img src="{{ url_for('photo', id=v.id, v=v.photo) }}" alt="">{% else %}<i class="phone mini" style="background: {{ v.color|gradient }}"></i>{% endif %}</span>
+      <span class="sum-main"><b>{{ v.brand }} {{ v.model }}</b><small>{{ [(v.storage ~ ' ГБ') if v.storage, (v.ram ~ ' ГБ ОЗУ') if v.ram, v.color]|select|join(' · ') }}</small></span>
+      <span class="sum-price">{{ v.price|money if v.price else 'цена не указана' }}</span>
+      <span class="chev">›</span>
+    </summary>
+    <form method="post" action="{{ url_for('admin_phone_edit', id=v.id) }}" enctype="multipart/form-data" class="addform editform">
+      {% for f in meta.fields %}
+      <label class="{{ 'wide' if f.kind == 'longtext' }}">{{ f.label }}{% if not f.req and f.kind != 'bool' %} (необязательно){% endif %}
+        {{ control(f, raw[f.name]) }}
+      </label>
+      {% if f.name == brand_col %}
+      <label>Или новая марка
+        <input name="new_brand" type="text" placeholder="Если нужной нет в списке">
+      </label>
+      {% endif %}
+      {% endfor %}
+      <label>Новое фото, лучше PNG{% if v.photo %} (сейчас есть){% endif %}
+        <input name="photo" type="file" accept="image/*">
+      </label>
+      <button class="btn" type="submit">Сохранить</button>
+    </form>
+  </details>
+  {% else %}
+  <div class="empty">Телефоны не найдены</div>
+  {% endfor %}
+</div>
+
+{% else %}
+<div class="orders-sum">
+  <div><small>Всего заказов</small><b>{{ orders|length }}</b></div>
+  <div><small>На сумму</small><b>{{ total|money }}</b></div>
+</div>
+<div class="table-wrap big">
+  {% if orders %}
+  <table class="orders-table">
+    <thead><tr><th>№</th><th>Дата</th><th>Покупатель</th><th>Телефон</th><th>Кол-во</th><th>Сумма</th><th>Оплата</th><th>Доставка</th><th>Статус</th></tr></thead>
+    <tbody>
+      {% for o in orders %}
+      <tr>
+        <td class="idcell">{{ o.id }}</td>
+        <td>{{ o.date or '' }}</td>
+        <td><b>{{ o.buyer or '—' }}</b><div class="cell-sub">{{ [o.phone, o.email]|select|join(' · ') }}</div></td>
+        <td>{{ o.model or '—' }}</td>
+        <td>{{ o.qty }}</td>
+        <td class="nowrap"><b>{{ o.sum|money }}</b></td>
+        <td>{{ o.pay or '' }}</td>
+        <td>{{ o.delivery or '' }}<div class="cell-sub">{{ o.address or '' }}</div></td>
+        <td>{% if o.status %}<span class="badge {{ o.status|badge }}">{{ o.status }}</span>{% endif %}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}<div class="empty">Заказов пока нет</div>{% endif %}
+</div>
+{% endif %}
+{% endblock %}

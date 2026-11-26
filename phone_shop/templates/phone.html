@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="crumbs"><a href="{{ url_for('catalog') }}">Каталог</a><span>›</span>{% if p.brand %}<a href="{{ url_for('catalog', brand=p.brand) }}">{{ p.brand }}</a><span>›</span>{% endif %}<b>{{ p.model }}</b></div>
+<section class="detail">
+  <div class="detail-pic">
+    {% if p.photo %}<img src="{{ url_for('photo', id=p.id, v=p.photo) }}" alt="{{ p.model }}">
+    {% else %}<div class="phone big" style="background: {{ p.color|gradient }}"></div>{% endif %}
+  </div>
+  <div class="detail-info">
+    <div class="brand">{{ p.brand }}{% if p.country %} · {{ p.country }}{% endif %}</div>
+    <h1>{{ p.model }}</h1>
+    {% if p.price %}<div class="price big">{{ p.price|money }}</div>{% endif %}
+    <dl class="facts">
+      {% if p.storage %}<div><dt>Память</dt><dd>{{ p.storage }} ГБ</dd></div>{% endif %}
+      {% if p.ram %}<div><dt>ОЗУ</dt><dd>{{ p.ram }} ГБ</dd></div>{% endif %}
+      {% if p.color %}<div><dt>Цвет</dt><dd>{{ p.color }}</dd></div>{% endif %}
+      {% if p.stock is not none and p.stock != '' %}<div><dt>На складе</dt><dd>{{ p.stock }} шт.</dd></div>{% endif %}
+    </dl>
+    {% if p.price and role in (None, 'user') %}
+    <form method="post" action="{{ url_for('cart_add', pid=p.id) }}" class="buy">
+      <input type="hidden" name="next" value="{{ request.path }}">
+      <button class="btn" type="submit">Добавить в корзину</button>
+    </form>
+    {% endif %}
+  </div>
+</section>
+{% if p.description %}
+<section class="about">
+  <h2>Описание</h2>
+  <p>{{ p.description }}</p>
+</section>
+{% endif %}
+{% endblock %}

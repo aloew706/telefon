@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="crumbs"><a href="{{ url_for('orders') }}">Мои заказы</a><span>›</span><b>Заказ №{{ o.id }}</b></div>
+<div class="page-head"><h1 class="page-title">Заказ №{{ o.id }}</h1></div>
+
+<section class="track">
+  {% if step == -1 %}
+    <div class="cancelled">Заказ отменён</div>
+  {% else %}
+  <ol class="steps">
+    <li class="{{ 'done' if step >= 1 }}{{ ' current' if step == 1 }}"><span class="dot"></span><b>Оформлен</b><small>{{ o.date or '' }}</small></li>
+    <li class="{{ 'done' if step >= 2 }}{{ ' current' if step == 2 }}"><span class="dot"></span><b>В пути</b><small>{{ o.sent or 'готовится к отправке' }}</small></li>
+    <li class="{{ 'done' if step >= 3 }}{{ ' current' if step == 3 }}"><span class="dot"></span><b>Доставлен</b><small>{{ o.received or 'ожидается' }}</small></li>
+  </ol>
+  {% endif %}
+  {% if o.status %}<div class="track-status"><span class="badge {{ o.status|badge }}">{{ o.status }}</span></div>{% endif %}
+</section>
+
+<section class="track-info">
+  <div class="facts">
+    <div><dt>Телефон</dt><dd>{{ o.model or '—' }}</dd></div>
+    <div><dt>Количество</dt><dd>{{ o.qty }} шт.</dd></div>
+    <div><dt>Сумма</dt><dd>{{ o.sum|money }}</dd></div>
+    {% if o.pay %}<div><dt>Оплата</dt><dd>{{ o.pay }}</dd></div>{% endif %}
+    {% if o.delivery %}<div><dt>Доставка</dt><dd>{{ o.delivery }}</dd></div>{% endif %}
+    {% if o.address %}<div><dt>Адрес</dt><dd>{{ o.address }}</dd></div>{% endif %}
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="panel">
+  <h2>Вход</h2>
+  <p class="sub">Войдите, чтобы оформлять заказы и следить за ними.</p>
+  <form method="post">
+    <input name="login" value="{{ login or '' }}" placeholder="Логин" autocomplete="username" required>
+    <input name="password" type="password" placeholder="Пароль" autocomplete="current-password" required>
+    <button class="btn" type="submit">Войти</button>
+    <div class="err">{{ error or '' }}</div>
+  </form>
+  <p class="hint">Нет аккаунта? <a href="{{ url_for('register') }}" class="lnk">Зарегистрироваться</a></p>
+</div>
+{% endblock %}

@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="panel">
+  <h2>Регистрация</h2>
+  <p class="sub">Создайте аккаунт, чтобы оформлять заказы.</p>
+  <form method="post" action="{{ url_for('register') }}">
+    <input name="fio" value="{{ f.fio or '' }}" placeholder="ФИО" autocomplete="name" required>
+    <input name="phone" value="{{ f.phone or '' }}" placeholder="Номер телефона" autocomplete="tel" required>
+    <input name="email" type="email" value="{{ f.email or '' }}" placeholder="Email" autocomplete="email" required>
+    <input name="address" value="{{ f.address or '' }}" placeholder="Адрес" autocomplete="street-address" required>
+    <input name="login" value="{{ f.login or '' }}" placeholder="Логин" autocomplete="username" required>
+    <input name="password" type="password" placeholder="Пароль" autocomplete="new-password" required>
+    <input name="password2" type="password" placeholder="Повторите пароль" autocomplete="new-password" required>
+    <button class="btn" type="submit">Зарегистрироваться</button>
+    <div class="err">{{ error or '' }}</div>
+  </form>
+  <p class="hint">Уже есть аккаунт? <a href="{{ url_for('login') }}" class="lnk">Войти</a></p>
+</div>
+{% endblock %}

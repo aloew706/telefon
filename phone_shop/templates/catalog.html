@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+{% block subnav %}
+  {% for b in brands %}<a class="nav-chip {{ 'on' if b == brand }}" href="{{ url_for('catalog', brand=b, q=q or None) }}">{{ b }}</a>{% endfor %}
+{% endblock %}
+{% block content %}
+{% if not q and not brand %}
+<section class="hero-grid">
+  <div class="hero-main">
+    <div class="hero-text">
+      <h1>Телефоны<br>на любой вкус</h1>
+      <p>Выбирайте модель, память и цвет, добавляйте в корзину и следите за заказом.</p>
+      <div class="hero-btns">
+        <a class="btn light" href="#catalog">Смотреть телефоны</a>
+        {% if role in (None, 'user') %}<a class="btn glass" href="{{ url_for('cart') }}">Корзина</a>{% endif %}
+      </div>
+    </div>
+    <div class="hero-art" aria-hidden="true">
+      <img class="hp hp-x" src="{{ url_for('static', filename='hero/xiaomi.png') }}" alt="">
+      <img class="hp hp-a" src="{{ url_for('static', filename='hero/apple.png') }}" alt="">
+      <img class="hp hp-g" src="{{ url_for('static', filename='hero/google.png') }}" alt="">
+    </div>
+  </div>
+  <div class="hero-side">
+    {% macro promo(p, label, cls) %}
+    <a class="tile promo {{ cls }}" href="{{ url_for('phone', id=p.id) }}">
+      <div class="promo-text">
+        <small>{{ label }}</small>
+        <b>{{ p.brand }} {{ p.model }}</b>
+        <span class="promo-price">{{ p.price|money }}</span>
+      </div>
+      <div class="promo-img">
+        {% if p.photo %}<img src="{{ url_for('photo', id=p.id, v=p.photo) }}" alt="">
+        {% else %}<i class="phone mini" style="background: {{ p.color|gradient }}"></i>{% endif %}
+      </div>
+    </a>
+    {% endmacro %}
+    {% if promo_new %}{{ promo(promo_new, 'Новинка в каталоге', 't1') }}
+    {% else %}<div class="tile t1"><small>Доставка</small><b>Курьер, почта<br>или самовывоз</b></div>{% endif %}
+    {% if promo_cheap %}{{ promo(promo_cheap, 'Выгодная цена', 't2') }}
+    {% else %}<div class="tile t2"><small>Оплата</small><b>Картой, наличными<br>или в рассрочку</b></div>{% endif %}
+  </div>
+</section>
+
+{% if brands %}
+<h2 class="sect">Марки</h2>
+<div class="brand-grid">
+  {% for b in brands %}
+  <a class="brand-card" href="{{ url_for('catalog', brand=b) }}#catalog"><span class="bi">{{ b[:1] }}</span>{{ b }}</a>
+  {% endfor %}
+</div>
+{% endif %}
+{% endif %}
+
+<h2 class="sect" id="catalog">
+  {% if brand %}{{ brand }}{% elif q %}Результаты поиска: «{{ q }}»{% else %}Все телефоны{% endif %}
+  <small>{{ items|length }}</small>
+</h2>
+<div class="tabs">
+  <a class="tab {{ 'on' if not brand }}" href="{{ url_for('catalog', q=q or None) }}#catalog">Все</a>
+  {% for b in brands %}<a class="tab {{ 'on' if b == brand }}" href="{{ url_for('catalog', brand=b, q=q or None) }}#catalog">{{ b }}</a>{% endfor %}
+</div>
+
+<div class="grid">
+  {% for i in items %}
+  <article class="card">
+    <a class="card-link" href="{{ url_for('phone', id=i.id) }}">
+      <div class="pic">
+        {% if i.brand %}<span class="pill">{{ i.brand }}</span>{% endif %}
+        {% if i.photo %}<img src="{{ url_for('photo', id=i.id, v=i.photo) }}" alt="{{ i.model }}" loading="lazy">
+        {% else %}<div class="phone" style="background: {{ i.color|gradient }}"></div>{% endif %}
+      </div>
+      <div class="model">{{ i.model }}</div>
+      <div class="specs">{{ [(i.storage ~ ' ГБ') if i.storage, (i.ram ~ ' ГБ ОЗУ') if i.ram, i.color]|select|join(' · ') }}</div>
+      {% if i.stock is not none and i.stock != '' %}
+        {% if i.stock|int <= 0 %}<div class="avail out"><i></i>Нет в наличии</div>
+        {% elif i.stock|int <= 3 %}<div class="avail low"><i></i>Мало</div>
+        {% else %}<div class="avail"><i></i>Достаточно</div>{% endif %}
+      {% endif %}
+    </a>
+    <div class="card-foot">
+      {% if i.price and role in (None, 'user') %}
+        <form method="post" action="{{ url_for('cart_add', pid=i.id) }}">
+          <input type="hidden" name="next" value="{{ request.full_path }}">
+          <button class="btn small" type="submit">В корзину</button>
+        </form>
+      {% else %}
+        <a class="more" href="{{ url_for('phone', id=i.id) }}">Подробнее ›</a>
+      {% endif %}
+      {% if i.price %}<span class="price">{{ i.price|money }}</span>{% endif %}
+    </div>
+  </article>
+  {% else %}
+  <div class="empty" style="grid-column: 1 / -1">Ничего не найдено</div>
+  {% endfor %}
+</div>
+{% endblock %}

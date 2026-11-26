@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1 class="page-title">Отслеживание заказа №{{ order.id }}</h1>
+    <p class="sub">Информация о текущем состоянии и доставке</p>
+  </div>
+  <a class="btn ghost" href="{{ url_for('orders') }}">Назад к заказам</a>
+</div>
+<div class="order track-card">
+  <div>
+    <h3>{{ order.model }}</h3>
+    <div class="meta">Оформлен: {{ order.date or '—' }} · {{ order.qty }} шт.</div>
+    {% if order.method %}<div class="meta">Способ доставки: {{ order.method }}</div>{% endif %}
+    {% if order.address %}<div class="meta">Адрес доставки: {{ order.address }}</div>{% endif %}
+  </div>
+  <div class="right">
+    <div class="sum">{{ order.sum|money }}</div>
+    <span class="badge {{ order.status|badge }}">{{ order.status }}</span>
+  </div>
+</div>
+<div class="panel tracking-panel">
+  <h2>Статус доставки</h2>
+  <div class="tracking-steps">
+    <div class="tracking-step done"><span class="step-dot"></span><div><strong>Заказ принят</strong><small>Заказ зарегистрирован</small></div></div>
+    <div class="tracking-step {{ 'done' if order.sent or 'отправ' in (order.status or '')|lower else '' }}"><span class="step-dot"></span><div><strong>Передан в доставку</strong><small>{% if order.sent %}Дата отправки: {{ order.sent }}{% else %}Ожидает отправки{% endif %}</small></div></div>
+    <div class="tracking-step {{ 'done' if order.received or 'доставлен' in (order.status or '')|lower else '' }}"><span class="step-dot"></span><div><strong>Доставлен</strong><small>{% if order.received %}Дата получения: {{ order.received }}{% else %}Ожидает получения{% endif %}</small></div></div>
+  </div>
+  {% if order.status and 'отмен' in order.status|lower %}<p class="err">Заказ отменён.</p>{% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="page-head"><h1 class="page-title">Мои заказы</h1></div>
+{% if orders %}
+<div class="orders">
+  {% for o in orders %}
+  <div class="order">
+    <div class="order-main">
+      <h3>{{ o.model or 'Телефон' }}</h3>
+      <div class="meta">Заказ №{{ o.id }} · {{ o.date or '' }} · {{ o.qty }} шт.{% if o.pay %} · {{ o.pay }}{% endif %}</div>
+      {% if o.status or o.delivery %}<span class="badge {{ o.status|badge }}">{{ [o.delivery, o.status]|select|join(' · ') }}</span>{% endif %}
+    </div>
+    <div class="right">
+      <div class="sum">{{ o.sum|money }}</div>
+      <a class="btn small ghost" href="{{ url_for('order_track', id=o.id) }}">Отследить ›</a>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% else %}<div class="empty">Заказов пока нет<br><br><a class="btn" href="{{ url_for('catalog') }}">Перейти в каталог</a></div>{% endif %}
+{% endblock %}
